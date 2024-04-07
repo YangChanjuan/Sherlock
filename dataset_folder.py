@@ -27,7 +27,7 @@ def has_file_allowed_extension(filename: str, extensions: Tuple[str, ...]) -> bo
     """
     return filename.lower().endswith(extensions)
 
-
+# 判断是否是元组中定义的图片
 def is_image_file(filename: str) -> bool:
     """Checks if a file is an allowed image extension.
 
@@ -101,7 +101,7 @@ class DatasetFolder(VisionDataset):
         samples (list): List of (sample path, class_index) tuples
         targets (list): The class_index value for each image in the dataset
     """
-
+    # 初始化数据集文件夹，包括指定的根目录 root，数据加载函数 loader，允许的文件扩展名 extensions，数据转换函数 transform，目标转换函数 target_transform 和文件有效性检查函数 is_valid_file。
     def __init__(
             self,
             root: str,
@@ -129,6 +129,7 @@ class DatasetFolder(VisionDataset):
         self.samples = samples
         self.targets = [s[1] for s in samples]
 
+    # 用于查找数据集中的类别目录，返回类别名称列表 classes 和类别名称到索引的映射字典 class_to_idx。
     def _find_classes(self, dir: str) -> Tuple[List[str], Dict[str, int]]:
         """
         Finds the class folders in a dataset.
@@ -147,6 +148,9 @@ class DatasetFolder(VisionDataset):
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
         return classes, class_to_idx
 
+    # 根据索引 index 获取数据集中的样本数据和对应的标签。
+    # 在加载样本时，会使用指定的 loader 函数加载图像数据。
+    # 如果设置了数据转换函数 transform 和目标转换函数 target_transform，则会对样本数据和标签进行相应的转换。
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
         """
         Args:
@@ -170,13 +174,16 @@ class DatasetFolder(VisionDataset):
             target = self.target_transform(target)
 
         return sample, target
-
+    
+    # 返回数据集中样本的数量。
     def __len__(self) -> int:
         return len(self.samples)
 
+# IMG_EXTENSIONS 是一个包含图像文件扩展名的元组，用于指定可以作为图像文件的常见文件扩展名列表。
+# 在图像数据加载器中，使用这个元组可以方便地检查一个文件是否属于图像文件，只需要检查文件的扩展名是否包含在 IMG_EXTENSIONS 中即可。
+# 例如，在 is_image_file 函数中，可以使用 IMG_EXTENSIONS 来判断一个文件是否是图像文件，如果文件的扩展名在 IMG_EXTENSIONS 中，则认为这个文件是一个图像文件。
 
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif', '.tiff', '.webp')
-
 
 def pil_loader(path: str) -> Image.Image:
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
@@ -202,7 +209,7 @@ def default_loader(path: str) -> Any:
     else:
         return pil_loader(path)
 
-
+# 继承自 DatasetFolder 类，是 DatasetFolder 的一种特例，专门用于加载图像数据。
 class ImageFolder(DatasetFolder):
     """A generic data loader where the images are arranged in this way: ::
 
@@ -230,6 +237,8 @@ class ImageFolder(DatasetFolder):
         imgs (list): List of (image path, class_index) tuples
     """
 
+    # 初始化图像文件夹数据集，可以指定根目录 root，数据转换函数 transform，目标转换函数 target_transform，加载函数 loader 和文件有效性检查函数 is_valid_file。
+    # 在初始化过程中，会调用 DatasetFolder 类的构造函数，并传递相应的参数。
     def __init__(
             self,
             root: str,
@@ -243,3 +252,4 @@ class ImageFolder(DatasetFolder):
                                           target_transform=target_transform,
                                           is_valid_file=is_valid_file)
         self.imgs = self.samples
+        # imgs 属性：保存了所有图像样本的路径和对应的类别索引，即列表中的每个元素是 (image_path, class_index) 的元组。
