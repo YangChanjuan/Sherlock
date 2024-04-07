@@ -25,7 +25,7 @@ def _cfg(url='', **kwargs):
         **kwargs
     }
 
-
+# 实现随机深度(Stochastic Depth)的drop path功能，用于残差块的主路径上应用随机深度
 class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
     """
@@ -39,7 +39,7 @@ class DropPath(nn.Module):
     def extra_repr(self) -> str:
         return 'p={}'.format(self.drop_prob)
 
-
+# 线性变换和激活函数GELU
 class Mlp(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
         super().__init__()
@@ -59,7 +59,7 @@ class Mlp(nn.Module):
         x = self.drop(x)
         return x
 
-
+# 注意力模块 用于对输入进行注意力计算
 class Attention(nn.Module):
     def __init__(
             self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0.,
@@ -106,7 +106,7 @@ class Attention(nn.Module):
         x = self.proj_drop(x)
         return x
 
-
+# Transformer模块的基本单元 包括层归一化、注意力计算、多层感知机等
 class Block(nn.Module):
 
     def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
@@ -138,7 +138,7 @@ class Block(nn.Module):
             x = x + self.drop_path(self.gamma_2 * self.mlp(self.norm2(x)))
         return x
 
-
+# 图像转换补丁嵌入的模块 用于将输入图像分割成补丁 并进行线性变换
 class PatchEmbed(nn.Module):
     """ Image to Patch Embedding
     """
@@ -161,7 +161,8 @@ class PatchEmbed(nn.Module):
             f"Input image size ({H}*{W}) doesn't match model ({self.img_size[0]}*{self.img_size[1]})."
         x = self.proj(x).flatten(2).transpose(1, 2)
         return x
-    
+
+# 生成位置编码表 用于向模型输入添加位置编码信息
 # sin-cos position encoding
 # https://github.com/jadore801120/attention-is-all-you-need-pytorch/blob/master/transformer/Models.py#L31
 def get_sinusoid_encoding_table(n_position, d_hid): 
@@ -176,7 +177,7 @@ def get_sinusoid_encoding_table(n_position, d_hid):
 
     return torch.FloatTensor(sinusoid_table).unsqueeze(0) 
 
-
+# 定义整个VIT模型架构，包括补丁嵌入、位置编码、多个transformer块、归一化层和分类头部
 class VisionTransformer(nn.Module):
     """ Vision Transformer with support for patch or hybrid CNN input stage
     """
