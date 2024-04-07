@@ -15,7 +15,8 @@ from torchvision import datasets, transforms
 import utils
 from dataset_folder import ImageFolder
 
-
+# 使用 argparse 解析命令行参数。
+# 导入模型、数据转换、数据集类、工具函数等模块。
 def evaluate(data_loader, model, device, experiment):
     criterion = torch.nn.CrossEntropyLoss()
     class_to_idx = data_loader.dataset.class_to_idx
@@ -59,7 +60,7 @@ def evaluate(data_loader, model, device, experiment):
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
-
+# 定义构建数据集函数 build_dataset
 def build_dataset(is_train, args):
     transform = build_transform(is_train, args)
 
@@ -94,10 +95,14 @@ def build_dataset(is_train, args):
     print('Built dataset')
     assert nb_classes == args.nb_classes
     print("Number of the class = %d" % args.nb_classes)
-
+    
+    # 返回构建好的数据集对象和类别数量 nb_classes。
     return dataset, nb_classes
 
-
+# 定义构建数据转换函数 build_transform：
+# 接收训练/验证标志 is_train 和命令行参数 args。
+# 根据是否训练，设置不同的数据转换策略。
+# 返回数据转换对象 transform。
 def build_transform(is_train, args):
     resize_im = args.input_size > 32
     imagenet_default_mean_and_std = args.imagenet_default_mean_and_std
@@ -144,11 +149,18 @@ def build_transform(is_train, args):
 
 
 if __name__ == '__main__':
+    # 参数解析器 argparse.ArgumentParser 创建parser参数解析器对象
     parser = argparse.ArgumentParser('MAE fine-tuning and evaluation script for image classification', add_help=False)
+    
+    # 这里使用 parser.add_argument 添加了多个命令行参数：
+        # --model: 模型的名称，默认为 'vit_base_patch16_224'。
+        # --model_path: 模型的路径，默认为 ./outputs/binary.pth，用于微调模型。
+        # --model_key: 模型的键名，用于从检查点中加载模型的特定键。
+        # --model_prefix: 模型参数键名的前缀，默认为空字符串。
     parser.add_argument('--model', default='vit_base_patch16_224', type=str, metavar='MODEL', #vit_base_patch16_224
                         help='Name of model to train')
     # * Finetuning params
-    parser.add_argument('--model_path', default='./outputs/binary.pth', help='finetune from checkpoint')
+    parser.add_argument('--model_path', default='./outputs/binary.pth', help='finetune from checkpoint')  # 加载预训练模型的path
     parser.add_argument('--model_key', default='model|module', type=str)
     parser.add_argument('--model_prefix', default='', type=str)
 
@@ -199,7 +211,7 @@ if __name__ == '__main__':
                         help='Do not random erase first (clean) augmentation split')
     args = parser.parse_args()
     device = torch.device(args.device)
-    dataset_val, _ = build_dataset(is_train=False, args=args)
+    dataset_val, _ = build_dataset(is_train=False, args=args)  # 构建验证集数据集和类别数量
     sampler_val = torch.utils.data.SequentialSampler(dataset_val)
     data_loader_val = torch.utils.data.DataLoader(
         dataset_val, sampler=sampler_val,
@@ -208,7 +220,7 @@ if __name__ == '__main__':
         pin_memory=args.pin_mem,
         drop_last=False
     )
-    model = create_model(
+    model = create_model(  # 创建模型
         args.model,
         pretrained=False,
         num_classes=args.nb_classes,
@@ -217,7 +229,8 @@ if __name__ == '__main__':
         attn_drop_rate=args.attn_drop_rate,
         drop_block_rate=None,
     )
-
+    
+    # 
     if args.model_path.startswith('https'):
         checkpoint = torch.hub.load_state_dict_from_url(
             args.model_path, map_location='cpu', check_hash=True)
@@ -238,7 +251,8 @@ if __name__ == '__main__':
         if k in checkpoint_model and checkpoint_model[k].shape != state_dict[k].shape:
             print(f"Removing key {k} from pretrained checkpoint")
             del checkpoint_model[k]
-
+    
+    # 加载模型参数到模型
     all_keys = list(checkpoint_model.keys())
     new_dict = OrderedDict()
     for key in all_keys:
